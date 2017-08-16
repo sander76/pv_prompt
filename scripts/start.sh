@@ -5,3 +5,5 @@ cd ..
 . env/bin/activate
 
 python start.py
+
+deactivate
