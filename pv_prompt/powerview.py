@@ -1,6 +1,7 @@
 import asyncio
 
 import logging
+
 from aiopvapi.helpers.constants import ATTR_ID, ATTR_NAME_UNICODE
 from aiopvapi.resources.room import Room
 from aiopvapi.resources.scene import Scene
@@ -81,7 +82,7 @@ class PowerView:
             return _rooms
 
     @asyncio.coroutine
-    def print_rooms(self,verbose=False):
+    def print_rooms(self, verbose=False):
         _rooms = yield from self.get_rooms(verbose=verbose)
         pprint(_rooms)
 
