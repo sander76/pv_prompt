@@ -3,6 +3,8 @@ import logging
 import asyncio
 import pprint
 
+_LOGGER = logging.getLogger(__name__)
+
 from prompt_toolkit import prompt_async
 
 from pv_prompt.command_options import CommandOptions, CommandOption
@@ -32,8 +34,12 @@ SHADES_COMMANDS = CommandOptions(
 )
 
 CMD_SHADE_DATA = CommandOption('s', '(s)hade data')
+CMD_OPEN_SHADE = CommandOption('o', '(o)pen shade')
+CMD_CLOSE_SHADE = CommandOption('c','(c)lose shade')
 SHADE_COMMANDS = CommandOptions(
-    CMD_SHADE_DATA
+    CMD_SHADE_DATA,
+    CMD_OPEN_SHADE,
+    CMD_CLOSE_SHADE
 )
 
 COMMAND_LIST_ROOMS = CommandOption('l', '(l)ist rooms')
@@ -99,7 +105,7 @@ class PowerViewPrompt(PowerView):
     @do_prompt
     async def rooms(self, result):
         # result = None
-        #ROOM_COMMANDS.print_options()
+        # ROOM_COMMANDS.print_options()
         # while not result == KEY_BACK and not result == KEY_QUIT:
         #    result = await prompt_async('ROOMS:> ')
         if result == COMMAND_LIST_ROOMS.key:
@@ -119,13 +125,31 @@ class PowerViewPrompt(PowerView):
 
     @do_prompt
     async def shade(self, result, active_id=None):
-        if result == CMD_SHADE_DATA.key:
-            _shade = await self.get_shade(active_id)
-            if _shade:
-                await _shade.refresh()
-                print(_shade.raw_data)
+        _LOGGER.debug(active_id)
+        _shade = await self.get_shade(int(active_id))
+        print(_shade)
+        if _shade is None:
+            print("error selecting shade")
+        else:
+            if result == CMD_SHADE_DATA.key:
+                # _shade = await self.get_shade(active_id)
+                if _shade:
+                    await _shade.refresh()
+                    print(_shade.raw_data)
+            elif result == CMD_OPEN_SHADE.key:
+                _LOGGER.debug('open shade')
+                if _shade:
+                    result = await _shade.open()
+                    if result:
+                        print("success")
+            elif result == CMD_CLOSE_SHADE.key:
+                _LOGGER.debug('close shade')
+                if _shade:
+                    result=await  _shade.close()
+                    if result:
+                        print("success")
 
-        return result
+          # return result
 
     @do_prompt
     async def select_shade(self, result):
@@ -135,7 +159,7 @@ class PowerViewPrompt(PowerView):
                                       options=SHADE_COMMANDS,
                                       active_id=_val)
         except ValueError:
-            print('Erorr: The id should be a number.')
+            print('Error: The id should be a number.')
         return result
 
     @do_prompt

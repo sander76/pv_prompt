@@ -173,7 +173,7 @@ class PowerView:
         return new_scene
 
     @asyncio.coroutine
-    def get_shade(self, shadeId):
+    def get_shade(self, shadeId:int) -> Shade:
         new_shade = None
         _shades = yield from self._shades.get_resources()
         if _shades:
