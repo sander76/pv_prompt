@@ -4,3 +4,7 @@
 
 env
 .idea
+build
+dist
+venv
+pv_prompt.egg-info
