@@ -10,7 +10,7 @@ def readme():
 setup(
     name='pv_prompt',
     long_description=readme(),
-    version='1.0',
+    version='1.1',
     packages=['pv_prompt'],
     url='https://github.com/sander76/pv_prompt',
     license='Apache License 2.0',
