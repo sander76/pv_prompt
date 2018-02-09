@@ -1,14 +1,16 @@
 import asyncio
 import aiohttp
-from aiopvapi.helpers.aiorequest import PvApiError
 
+from typing import List
+from aiopvapi.helpers.aiorequest import PvApiError
 from aiopvapi.helpers.constants import ATTR_NAME_UNICODE, ATTR_ID
 from aiopvapi.shades import Shades as PvShades, ATTR_SHADE_DATA
 from functools import wraps
-
 from nmb.NetBIOS import NetBIOS
 from prompt_toolkit import prompt, print_formatted_text, HTML
 from aiopvapi.resources.shade import Shade as PvShade
+from prompt_toolkit.contrib.completers import WordCompleter
+
 
 NETBIOS_HUB2_NAME = 'PowerView-Hub'
 # todo: get the proper hub1 netbios name.
@@ -52,8 +54,6 @@ def coro(func):
     return wrapper
 
 
-# todo: handle request timeout. Throws an pvapiconnection error which is not handled
-
 class BasePrompt:
     def __init__(self, commands=None):
         self._prompt = "Enter a command: "
@@ -77,12 +77,8 @@ class BasePrompt:
 
     def current_prompt(self, prompt_=None, toolbar=None, autocomplete=None,
                        autoreturn=False):
-        """The currently activate prompt.
+        """The currently active prompt.
 
-        - Stays in the active loop when input value is associated with a
-          command AND command exits with None
-        - Return with the return value of the associated command if NOT None.
-        - Returns with the entered value when no method is attached to it.
         """
         self._auto_return = autoreturn
         if toolbar is not None:
@@ -92,7 +88,8 @@ class BasePrompt:
         try:
             while True:
                 _command = prompt(prompt_,
-                                  bottom_toolbar=self._toolbar_string())
+                                  bottom_toolbar=self._toolbar_string(),
+                                  completer=autocomplete)
                 _meth = self.commands.get(_command)
                 if _meth:
                     val = _meth(self, _command)
@@ -152,9 +149,13 @@ class Shades(PvPrompt):
                                 's': self.select_shade})
         self._prompt = "Shades: "
         self._raw = {}
+        self._shade_id_suggestions = None
+
+    def _populate_suggestions(self, shade_ids: List[str]):
+        self._shade_id_suggestions = WordCompleter(shade_ids)
 
     def find_by_id(self, id_: int):
-        for _shade in self._raw[ATTR_SHADE_DATA]:
+        for _shade in self._raw:
             if _shade[ATTR_ID] == id_:
                 return _shade
         return None
@@ -162,18 +163,26 @@ class Shades(PvPrompt):
     @coro
     async def list_shades(self, *args, **kwargs):
         print("getting shades")
-        self._raw = await self._shades_resource.get_resources()
+        self._raw = (await self._shades_resource.get_resources()).get(
+            ATTR_SHADE_DATA)
         print("")
-        for _shade in self._raw[ATTR_SHADE_DATA]:
+
+        for _shade in self._raw:
             print_key_values(_shade[ATTR_NAME_UNICODE],
                              _shade[ATTR_ID])
+        self._populate_suggestions(
+            [str(ids[ATTR_ID]) for ids in self._raw]
+        )
+
         print("")
 
     def select_shade(self, *args, **kwargs):
         base_prompt = BasePrompt()
-        _id = base_prompt.current_prompt("Select a shade id: ",
-                                         toolbar="Enter a shade id.",
-                                         autoreturn=True)
+        _id = base_prompt.current_prompt(
+            "Select a shade id: ",
+            toolbar="Enter a shade id.",
+            autoreturn=True,
+            autocomplete=self._shade_id_suggestions)
         _shade = None
         if _id is None:
             return
@@ -194,22 +203,49 @@ class Discovery(BasePrompt):
         super().__init__()
         self._prompt = "Hub connection: "
         self.register_commands({'d': self.discover, 'c': self.connect})
+        self._ip_suggestions = None
+        self._ip_completer = None
 
     def discover(self, *args, **kwargs):
         nb = NetBIOS()
-        hub2 = nb.queryName(NETBIOS_HUB2_NAME)
-        for _hub in hub2:
-            print_key_values('hub2', _hub)
+        info('Discovering hubs...')
+        self._ip_suggestions = nb.queryName(NETBIOS_HUB2_NAME, timeout=5)
+        if self._ip_suggestions:
+            for _hub in self._ip_suggestions:
+                print_key_values('hub2', _hub)
+            self._populate_completer()
+        else:
+            warn("...Discovery timed out")
+
+    def _populate_completer(self):
+        self._ip_completer = WordCompleter(self._ip_suggestions)
 
     def connect(self, *args, **kwargs):
         self._auto_return = True  # Exits the prompt loop.
         pr = BasePrompt()
         ip = pr.current_prompt(
             'Enter ip address: ',
-            toolbar='Enter a valid ip address: http://129.168.2.3',
-            autoreturn=True)
-        # todo: implement ip validation here.
-        return ip
+            toolbar='Enter a valid ip address: 129.168.2.3',
+            autoreturn=True,
+            autocomplete=self._ip_completer
+        )
+        try:
+            self.validate_ip(ip)
+        except ValueError:
+            warn("Invalid ip entered.")
+        else:
+            self._auto_return = True  # Exits the prompt loop.
+            return 'http://{}'.format(ip)
+
+    def validate_ip(self, ip):
+        vals = ip.split('.')
+        try:
+            ints = (int(val) for val in vals)
+        except ValueError:
+            raise ValueError
+        for _int in ints:
+            if _int < 0 or _int > 256:
+                raise ValueError
 
 
 class MainMenu(PvPrompt):
