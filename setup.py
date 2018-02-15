@@ -10,7 +10,7 @@ def readme():
 setup(
     name='pv_prompt',
     long_description=readme(),
-    version='1.1',
+    version='1.2',
     packages=['pv_prompt'],
     url='https://github.com/sander76/pv_prompt',
     license='Apache License 2.0',
@@ -22,7 +22,6 @@ setup(
         'Operating System :: OS Independent',
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
