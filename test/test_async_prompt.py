@@ -1,6 +1,6 @@
 import pytest
 
-from pv_prompt.async_prompt import BasePrompt
+from pv_prompt.base_prompts import BasePrompt
 
 
 def another_method():
