@@ -1,4 +1,6 @@
+import asyncio
 import logging
+from asyncio import CancelledError
 from typing import TYPE_CHECKING
 
 from prompt_toolkit import print_formatted_text, HTML
@@ -34,13 +36,22 @@ def warn(text):
         HTML('  <ansired>{}</ansired>'.format(text)))
 
 
-def print_waiting_done(action):
-    def done():
-        info('done')
+def print_waiting_done(action, loop):
+    async def waiting():
+        info(action, end='')
+        try:
+            while True:
+                await asyncio.sleep(0.5)
+                info('.', end='')
+        except CancelledError:
+            info('done')
 
-    info(action, end='')
+    task = asyncio.ensure_future(waiting())
 
-    return done
+    def _finished():
+        task.cancel()
+
+    return _finished
 
 
 def print_scenes(scenes: 'ResourceCache', rooms):

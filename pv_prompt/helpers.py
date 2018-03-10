@@ -1,20 +1,14 @@
-from functools import wraps
+import asyncio
 
-from aiopvapi.helpers.aiorequest import PvApiError
-
-from pv_prompt.print_output import warn
+_LOOP = None
 
 
-def coro(func):
-    @wraps(func)
-    def wrapper(self, *args, **kwargs):
-        try:
-            val = self.request.loop.run_until_complete(
-                func(self, *args, **kwargs))
-            # val = self.loop.run_until_complete(func(self, *args, **kwargs))
-            # self.loop.stop()
-            return val
-        except PvApiError as err:
-            warn("PROBLEM SENDING OUT COMMAND.")
+def get_loop():
+    """Return a default asyncio event loop."""
+    global _LOOP
 
-    return wrapper
+    if _LOOP is not None:
+        return _LOOP
+
+    _LOOP = asyncio.get_event_loop()
+    return _LOOP

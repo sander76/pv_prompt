@@ -5,7 +5,8 @@ from typing import TYPE_CHECKING
 
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.helpers.api_base import ApiResource
-from prompt_toolkit import prompt
+# from prompt_toolkit import prompt
+from prompt_toolkit.shortcuts import Prompt
 
 from pv_prompt.print_output import info
 
@@ -80,8 +81,9 @@ class BasePrompt:
         """Adds commands key strokes to watch in that context"""
         self._commands.update(commands)
 
-    def current_prompt(self, prompt_=None, toolbar=None, autocomplete=None,
-                       autoreturn=False):
+    async def current_prompt(self, prompt_=None, toolbar=None,
+                             autocomplete=None,
+                             autoreturn=False):
         """The currently active prompt.
 
         """
@@ -92,15 +94,19 @@ class BasePrompt:
             prompt_ = self._prompt
         try:
             while True:
-                _command = prompt(prompt_,
-                                  bottom_toolbar=self._toolbar_string(),
-                                  completer=autocomplete)
+                prompt = Prompt(prompt_,bottom_toolbar=self._toolbar_string,completer=autocomplete)
+                _command = await prompt.prompt(async_=True)
+                # _command = await Prompt.prompt(
+                #     prompt_,
+                #     bottom_toolbar=self._toolbar_string(),
+                #     completer=autocomplete,
+                #     async_=True)
                 LOGGER.debug("received command: {}".format(_command))
                 _meth = self.commands.get(_command)
                 if _meth:
                     LOGGER.debug(
                         "a method tied to this command: {}".format(_meth))
-                    val = _meth(_command)
+                    val = await _meth(_command)
                     LOGGER.debug("method return with value: {}".format(val))
                     if _meth.autoreturn:
                         LOGGER.debug("auto returning from the method")

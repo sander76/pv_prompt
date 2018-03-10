@@ -7,8 +7,8 @@ from aiopvapi.shades import Shades as PvShades
 from prompt_toolkit.contrib.completers import WordCompleter
 
 from pv_prompt.base_prompts import BasePrompt, InvalidIdException
-from pv_prompt.helpers import coro
-from pv_prompt.print_output import info, print_waiting_done
+from pv_prompt.helpers import get_loop
+from pv_prompt.print_output import print_waiting_done
 
 
 class ResourceCache:
@@ -52,38 +52,37 @@ class ResourceCache:
         except ValueError:
             raise InvalidIdException('Incorrect ID.')
 
-    def select_resource(self):
+    async def select_resource(self):
         base_prompt = BasePrompt()
-        resource = self._validate_id(
-            base_prompt.current_prompt(
-                "Select a {} id: ".format(self.resource_type_name),
-                toolbar="Enter a {} id.".format(self.resource_type_name),
-                autoreturn=True,
-                autocomplete=self.id_suggestions
-            )
+        resource = self._validate_id(await base_prompt.current_prompt(
+            "Select a {} id: ".format(self.resource_type_name),
+            toolbar="Enter a {} id.".format(self.resource_type_name),
+            autoreturn=True,
+            autocomplete=self.id_suggestions
         )
+                                     )
         return resource
 
-    @coro
     async def get_resource(self):
         self.resources = await self.api_entry_point.get_instances()
         self._populate_id_suggestions()
 
 
 class HubCache:
-    def __init__(self, request):
+    def __init__(self, request, loop=None):
         self.shades = ResourceCache(PvShades(request), 'shade', request)
         self.rooms = ResourceCache(PvRooms(request), 'room', request)
         self.scenes = ResourceCache(PvScenes(request), 'scene', request)
         self.scene_members = ResourceCache(
             PvSceneMembers(request), 'scene member', request)
+        self.loop = loop or get_loop()
 
-    def update(self):
-        done = print_waiting_done('getting shades.. ')
-        self.shades.get_resource()
+    async def update(self):
+        done = print_waiting_done('getting shades.. ', self.loop)
+        await self.shades.get_resource()
         done()
-        done = print_waiting_done('getting rooms..')
-        self.rooms.get_resource()
+        done = print_waiting_done('getting rooms..', self.loop)
+        await self.rooms.get_resource()
         done()
-        self.scenes.get_resource()
-        self.scene_members.get_resource()
+        await self.scenes.get_resource()
+        await self.scene_members.get_resource()
