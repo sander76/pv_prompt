@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from argparse import ArgumentParser
 
@@ -149,8 +148,9 @@ class Shades(PvPrompt):
         super().__init__(request, hub_cache)
         # self._shades_resource = PvShades(request)
         self.api_resource = hub_cache.shades
-        self.register_commands({'l': Command(function_=self._list_shades),
-                                's': Command(function_=self._select_shade)})
+        self.register_commands(
+            {'l': Command(function_=self._list_shades),
+             's': Command(function_=self._select_shade)})
         self._prompt = "Shades: "
 
     async def _list_shades(self, *args, **kwargs):
@@ -161,7 +161,7 @@ class Shades(PvPrompt):
         try:
             pv_shade = await self.hub_cache.shades.select_resource()
             shade = Shade(pv_shade, self.request, self.hub_cache)
-            shade.current_prompt()
+            await shade.current_prompt()
         except InvalidIdException as err:
             warn(err)
 
@@ -230,10 +230,11 @@ class MainMenu(BasePrompt):
         self._hub_cache = None
 
     def _register_hub_commands(self):
-        self.register_commands({'s': Command(function_=self.shades),
-                                'e': Command(function_=self.scenes),
-                                'r': Command(function_=self.rooms),
-                                'h': Command(function_=self.hub_cache)})
+        self.register_commands(
+            {'s': Command(function_=self.shades),
+             'e': Command(function_=self.scenes),
+             'r': Command(function_=self.rooms),
+             'h': Command(function_=self.hub_cache)})
 
     async def _connect_to_hub(self, *args, **kwargs):
         discovery = Discovery()
@@ -298,8 +299,6 @@ def main():
     try:
         _main = MainMenu(loop, args.hubip)
         loop.run_until_complete(_main.current_prompt())
-
-        # my_tool(loop, session)
     except QuitException:
         print("closing pv toolkit")
     finally:

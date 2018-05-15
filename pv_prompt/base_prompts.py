@@ -29,16 +29,22 @@ class InvalidIdException(Exception):
 
 
 class Command:
-    def __init__(self, function_=None, label=None, autoreturn=False):
-        if function_:
-            self._function = function_
-        else:
-            self._function = lambda x: None
+    """Command class. Is bound to a key press."""
+
+    def __init__(self, function_=None, label=None,
+                 autoreturn=False):
+        self._function = function_ or self._empty
+        # if not asyncio.iscoroutine(self._function):
+        #     raise TypeError("function is not a coroutine: {}".format(
+        #         self._function.__name__))
         self.autoreturn = autoreturn
         self._label = label
 
     def __call__(self, *args, **kwargs):
         return self._function(*args, **kwargs)
+
+    async def _empty(self, *args, **kwargs):
+        return None
 
     @property
     def name(self):
@@ -48,10 +54,11 @@ class Command:
             return self._function.__name__
 
     def __repr__(self):
-        return '{}({},{},{}'.format(self.__class__.__name__,
-                                    self._function.__name__,
-                                    self.name,
-                                    self.autoreturn)
+        return '{}({},{},{}'.format(
+            self.__class__.__name__,
+            self._function.__name__,
+            self.name,
+            self.autoreturn)
 
 
 class BasePrompt:
@@ -94,7 +101,8 @@ class BasePrompt:
             prompt_ = self._prompt
         try:
             while True:
-                prompt = Prompt(prompt_,bottom_toolbar=self._toolbar_string,completer=autocomplete)
+                prompt = Prompt(prompt_, bottom_toolbar=self._toolbar_string,
+                                completer=autocomplete)
                 _command = await prompt.prompt(async_=True)
                 # _command = await Prompt.prompt(
                 #     prompt_,
@@ -120,7 +128,7 @@ class BasePrompt:
     # def back(self, *args, **kwargs):
     #     raise BackException()
 
-    def quit(self, *args, **kwargs):
+    async def quit(self, *args, **kwargs):
         raise QuitException()
 
 
@@ -151,6 +159,6 @@ class PvResourcePrompt(PvPrompt):
         self.register_commands(
             {'s': Command(function_=self.show_raw, label='(s)how raw')})
 
-    def show_raw(self, *args, **kwargs):
+    async def show_raw(self, *args, **kwargs):
         _str = json.dumps(self.pv_resource.raw_data, indent=4)
         info(_str)

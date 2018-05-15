@@ -31,6 +31,12 @@ def info(text, **kwargs):
     )
 
 
+def spinner():
+    print_formatted_text(
+        HTML('<orange>.</orange>', end='')
+    )
+
+
 def warn(text):
     print_formatted_text(
         HTML('  <ansired>{}</ansired>'.format(text)))
@@ -41,15 +47,18 @@ def print_waiting_done(action, loop):
         info(action, end='')
         try:
             while True:
-                await asyncio.sleep(0.5)
-                info('.', end='')
+                await asyncio.sleep(0.3)
+                spinner()
         except CancelledError:
             info('done')
 
     task = asyncio.ensure_future(waiting())
 
-    def _finished():
+    async def _finished():
+        # todo: make the wile loop not infinite as it might hang indefinitely
         task.cancel()
+        while not task.cancelled:
+            await asyncio.sleep(0.5)
 
     return _finished
 

@@ -6,7 +6,6 @@ def readme():
         return f.read()
 
 
-
 setup(
     name='pv_prompt',
     long_description=readme(),
@@ -26,7 +25,8 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
     description='PowerView shades toolkit',
-    install_requires=["aiopvapi", "prompt-toolkit==2.0.0", "pysmb"],
+    install_requires=["aiopvapi", 'asyncdns2', "pysmb",
+                      'prompt_toolkit==2.0.0', 'zeroconf'],
     entry_points={
         'console_scripts': ['pv_prompt=pv_prompt.async_prompt:main']
     }

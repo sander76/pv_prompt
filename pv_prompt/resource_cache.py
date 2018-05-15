@@ -1,4 +1,5 @@
-from aiopvapi.helpers.aiorequest import AioRequest
+import asyncio
+from aiopvapi.helpers.aiorequest import AioRequest, PvApiConnectionError
 from aiopvapi.helpers.api_base import ApiEntryPoint
 from aiopvapi.rooms import Rooms as PvRooms
 from aiopvapi.scene_members import SceneMembers as PvSceneMembers
@@ -64,8 +65,17 @@ class ResourceCache:
         return resource
 
     async def get_resource(self):
-        self.resources = await self.api_entry_point.get_instances()
-        self._populate_id_suggestions()
+        done = print_waiting_done(
+            'getting {}s'.format(self.resource_type_name), self.request.loop)
+        try:
+
+            self.resources = await self.api_entry_point.get_instances()
+            self._populate_id_suggestions()
+            await done()
+        except PvApiConnectionError as err:
+            print(err)
+        finally:
+            await done()
 
 
 class HubCache:
@@ -78,11 +88,8 @@ class HubCache:
         self.loop = loop or get_loop()
 
     async def update(self):
-        done = print_waiting_done('getting shades.. ', self.loop)
         await self.shades.get_resource()
-        done()
-        done = print_waiting_done('getting rooms..', self.loop)
         await self.rooms.get_resource()
-        done()
         await self.scenes.get_resource()
         await self.scene_members.get_resource()
+        await asyncio.sleep(1)
