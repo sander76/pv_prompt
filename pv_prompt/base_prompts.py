@@ -104,11 +104,6 @@ class BasePrompt:
                 prompt = Prompt(prompt_, bottom_toolbar=self._toolbar_string,
                                 completer=autocomplete)
                 _command = await prompt.prompt(async_=True)
-                # _command = await Prompt.prompt(
-                #     prompt_,
-                #     bottom_toolbar=self._toolbar_string(),
-                #     completer=autocomplete,
-                #     async_=True)
                 LOGGER.debug("received command: {}".format(_command))
                 _meth = self.commands.get(_command)
                 if _meth:

@@ -4,9 +4,11 @@ import asyncio
 import logging
 import socket
 
-from aiopvapi.helpers.aiorequest import AioRequest
+from aiopvapi.helpers.aiorequest import AioRequest, PvApiResponseStatusError
 from aiopvapi.hub import Hub
 from zeroconf import Zeroconf, ServiceBrowser, ServiceStateChange
+
+from pv_prompt.print_output import warn
 
 LOGGER = logging.getLogger(__name__)
 
@@ -20,8 +22,13 @@ class Zero:
         self._tasks = []
 
     async def add_update_task(self, hub):
-        await hub.query_user_data()
-        await hub.request.websession.close()
+        try:
+            await hub.query_user_data()
+        except PvApiResponseStatusError as err:
+            warn('hub {} {} does not respond.'.format(hub.name,hub.ip))
+            self.hubs.remove(hub)
+        finally:
+            await hub.request.websession.close()
 
     async def discover(self, wait_for=5):
         LOGGER.debug('starting discovery')
@@ -38,8 +45,8 @@ class Zero:
         LOGGER.debug("waiting for all tasks to finish.")
         try:
             await asyncio.gather(*self._tasks)
-        except Exception as err:
-            LOGGER.exception(err)
+        except PvApiResponseStatusError as err:
+            LOGGER.error(err)
 
     def on_service_state_change(self, zeroconf, service_type, name,
                                 state_change):
