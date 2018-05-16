@@ -13,8 +13,9 @@ from pv_prompt.base_prompts import BasePrompt, PvPrompt, PvResourcePrompt, \
     InvalidIdException, QuitException, Command
 from pv_prompt.helpers import get_loop
 from pv_prompt.print_output import info, print_scenes, warn, print_shade_data, \
-    print_resource_data, print_key_values
+    print_resource_data, print_key_values, print_waiting_done, print_table
 from pv_prompt.resource_cache import HubCache
+from pv_prompt.zero_conf import Zero
 
 NETBIOS_HUB2_NAME = 'PowerView-Hub'
 # todo: get the proper hub1 netbios name.
@@ -177,15 +178,37 @@ class Discovery(BasePrompt):
         self._ip_completer = None
 
     async def _discover(self, *args, **kwargs):
+        self._ip_suggestions = []
+        zero = Zero(self.loop)
+        done = print_waiting_done('Discovering hubs')
+        LOGGER.debug("discover command fire")
+        await zero.discover()
+        LOGGER.debug("discovery done")
+        await done()
+        if zero.hubs:
+            self.print_hub_table()
+            for _hub in zero.hubs:
+                print_key_values(_hub.name, _hub.ip)
+                self._ip_suggestions.append(_hub.ip)
+        self._populate_completer()
+
+    async def _discover_hub1(self, *args, **kwargs):
         nb = NetBIOS()
         info('Discovering hubs...')
-        self._ip_suggestions = nb.queryName(NETBIOS_HUB2_NAME, timeout=5)
+        LOGGER.debug("discover command fire")
+        self._ip_suggestions = nb.queryName(NETBIOS_HUB1_NAME, timeout=5)
         if self._ip_suggestions:
+            self.print_hub_table()
             for _hub in self._ip_suggestions:
-                print_key_values('hub2', _hub)
+                print_table('hub1', _hub)
             self._populate_completer()
         else:
             warn("...Discovery timed out")
+
+    def print_hub_table(self):
+        print('')
+        print_table('NAME', 'IP ADDRESS')
+        print_table('----', '----------')
 
     def _populate_completer(self):
         self._ip_completer = WordCompleter(self._ip_suggestions)

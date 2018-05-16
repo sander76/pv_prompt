@@ -9,7 +9,7 @@ def readme():
 setup(
     name='pv_prompt',
     long_description=readme(),
-    version='1.3',
+    version='1.4',
     packages=['pv_prompt'],
     url='https://github.com/sander76/pv_prompt',
     license='Apache License 2.0',
@@ -25,8 +25,8 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
     description='PowerView shades toolkit',
-    install_requires=["aiopvapi", 'asyncdns2', "pysmb",
-                      'prompt_toolkit==2.0.0', 'zeroconf'],
+    install_requires=["aiopvapi",
+                      "pysmb", 'zeroconf'],
     entry_points={
         'console_scripts': ['pv_prompt=pv_prompt.async_prompt:main']
     }

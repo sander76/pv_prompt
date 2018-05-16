@@ -66,12 +66,11 @@ class ResourceCache:
 
     async def get_resource(self):
         done = print_waiting_done(
-            'getting {}s'.format(self.resource_type_name), self.request.loop)
+            'getting {}s'.format(self.resource_type_name))
         try:
 
             self.resources = await self.api_entry_point.get_instances()
             self._populate_id_suggestions()
-            await done()
         except PvApiConnectionError as err:
             print(err)
         finally:
