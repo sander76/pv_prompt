@@ -1,3 +1,4 @@
 aiohttp
 aiopvapi
 async-timeout
+prompt_toolkit

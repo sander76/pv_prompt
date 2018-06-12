@@ -1,5 +1,4 @@
 import asyncio
-from typing import Optional, Coroutine, Any
 
 _LOOP = None
 
@@ -13,4 +12,3 @@ def get_loop():
 
     _LOOP = asyncio.get_event_loop()
     return _LOOP
-

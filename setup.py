@@ -1,5 +1,7 @@
 from setuptools import setup
 
+VERSION = 1.6
+
 
 def readme():
     with open('README.rst') as f:
@@ -9,10 +11,9 @@ def readme():
 setup(
     name='pv_prompt',
     long_description=readme(),
-    version='1.4',
+    version=VERSION,
     packages=['pv_prompt'],
     url='https://github.com/sander76/pv_prompt',
-    license='Apache License 2.0',
     author='Sander Teunissen',
     classifiers=[
         'Programming Language :: Python',
@@ -25,8 +26,11 @@ setup(
         'Programming Language :: Python :: 3.6',
     ],
     description='PowerView shades toolkit',
-    install_requires=["aiopvapi",
-                      "pysmb", 'zeroconf'],
+    install_requires=["prompt_toolkit",
+                      "aiopvapi",
+                      "pysmb",
+                      'zeroconf']
+    ,
     entry_points={
         'console_scripts': ['pv_prompt=pv_prompt.async_prompt:main']
     }

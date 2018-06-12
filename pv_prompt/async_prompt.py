@@ -6,7 +6,8 @@ from aiopvapi.resources.scene import Scene as PvScene
 from aiopvapi.resources.shade import BaseShade
 from aiopvapi.scene_members import SceneMembers
 from nmb.NetBIOS import NetBIOS
-from prompt_toolkit.contrib.completers import WordCompleter
+from prompt_toolkit.completion import WordCompleter
+
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 
 from pv_prompt.base_prompts import BasePrompt, PvPrompt, PvResourcePrompt, \
@@ -66,7 +67,8 @@ class Shade(PvResourcePrompt):
             {'j': Command(function_=self.jog, label='(j)og'),
              'o': Command(function_=self.open),
              'c': Command(function_=self.close),
-             'r': Command(function_=self.refresh)})
+             'r': Command(function_=self.refresh),
+             's': Command(function_=self.stop)})
 
     async def refresh(self, *args, **kwargs):
         await self.pv_resource.refresh()
@@ -79,6 +81,9 @@ class Shade(PvResourcePrompt):
 
     async def close(self, *args, **kwargs):
         await self.pv_resource.close()
+
+    async def stop(self, *args, **kwargs):
+        await self.pv_resource.stop()
 
 
 class Scenes(PvPrompt):

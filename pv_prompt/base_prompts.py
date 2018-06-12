@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.helpers.api_base import ApiResource
 # from prompt_toolkit import prompt
-from prompt_toolkit.shortcuts import Prompt
+from prompt_toolkit import PromptSession
 
 from pv_prompt.print_output import info
 
@@ -101,7 +101,7 @@ class BasePrompt:
             prompt_ = self._prompt
         try:
             while True:
-                prompt = Prompt(prompt_, bottom_toolbar=self._toolbar_string,
+                prompt = PromptSession(prompt_, bottom_toolbar=self._toolbar_string,
                                 completer=autocomplete)
                 _command = await prompt.prompt(async_=True)
                 LOGGER.debug("received command: {}".format(_command))

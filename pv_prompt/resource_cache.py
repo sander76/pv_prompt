@@ -5,7 +5,7 @@ from aiopvapi.rooms import Rooms as PvRooms
 from aiopvapi.scene_members import SceneMembers as PvSceneMembers
 from aiopvapi.scenes import Scenes as PvScenes
 from aiopvapi.shades import Shades as PvShades
-from prompt_toolkit.contrib.completers import WordCompleter
+from prompt_toolkit.completion import WordCompleter
 
 from pv_prompt.base_prompts import BasePrompt, InvalidIdException
 from pv_prompt.helpers import get_loop
