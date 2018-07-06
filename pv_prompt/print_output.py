@@ -24,6 +24,9 @@ def print_table(*values):
             _columns - 1)
     print_formatted_text(HTML(_full.format(*values)))
 
+def print_tabbed_data(*row):
+    _columns = len(row)
+
 
 def info(text, **kwargs):
     print_formatted_text(
@@ -52,7 +55,6 @@ def print_waiting_done(action):
                 spinner()
         except CancelledError:
             pass
-
 
     task = asyncio.ensure_future(waiting())
 

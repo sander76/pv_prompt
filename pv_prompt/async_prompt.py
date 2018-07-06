@@ -2,9 +2,7 @@ import logging
 from argparse import ArgumentParser
 
 from aiopvapi.helpers.aiorequest import AioRequest
-from aiopvapi.resources.scene import Scene as PvScene
 from aiopvapi.resources.shade import BaseShade
-from aiopvapi.scene_members import SceneMembers
 from nmb.NetBIOS import NetBIOS
 from prompt_toolkit.completion import WordCompleter
 
@@ -13,9 +11,10 @@ from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 from pv_prompt.base_prompts import BasePrompt, PvPrompt, PvResourcePrompt, \
     InvalidIdException, QuitException, Command
 from pv_prompt.helpers import get_loop
-from pv_prompt.print_output import info, print_scenes, warn, print_shade_data, \
+from pv_prompt.print_output import info, warn, print_shade_data, \
     print_resource_data, print_key_values, print_waiting_done, print_table
 from pv_prompt.resource_cache import HubCache
+from pv_prompt.scenes import Scenes
 from pv_prompt.zero_conf import Zero
 
 NETBIOS_HUB2_NAME = 'PowerView-Hub'
@@ -84,57 +83,6 @@ class Shade(PvResourcePrompt):
 
     async def stop(self, *args, **kwargs):
         await self.pv_resource.stop()
-
-
-class Scenes(PvPrompt):
-    def __init__(self, request, hub_cache: HubCache):
-        super().__init__(request, hub_cache)
-        self.api_resource = hub_cache.scenes
-        self.register_commands(
-            {'l': Command(function_=self.list_scenes),
-             'a': Command(function_=self.activate_scene),
-             's': Command(function_=self.select_scene)})
-
-    async def list_scenes(self, *args, **kwargs):
-        info("Getting scenes...")
-        print_scenes(self.hub_cache.scenes, self.hub_cache.rooms)
-
-    async def activate_scene(self, *args, **kwargs):
-        try:
-            _scene = await self.hub_cache.scenes.select_resource()
-
-            await _scene.activate()
-
-        except InvalidIdException as err:
-            warn(err)
-
-    async def select_scene(self, *args, **kwargs):
-        try:
-            pv_scene = await self.hub_cache.scenes.select_resource()
-            scene = Scene(pv_scene, self.request, self.hub_cache)
-            await scene.current_prompt()
-        except InvalidIdException as err:
-            warn(err)
-
-
-class Scene(PvResourcePrompt):
-    def __init__(self, scene: PvScene, request, hub_cache):
-        super().__init__(scene, request, hub_cache)
-        self._prompt = 'scene {} {}:'.format(scene.id, scene.name)
-        self.register_commands(
-            {'a': Command(function_=self.add_shade_to_scene)})
-
-    async def add_shade_to_scene(self, *args, **kwargs):
-        shade = await self.hub_cache.shades.select_resource()
-        _position = await shade.get_current_position()
-        if _position:
-            await (SceneMembers(self.request)).create_scene_member(
-                _position, self.api_resource.id, shade.id)
-        info('Scene created.')
-
-    async def show_members(self, *args, **kwargs):
-        info("getting scene members")
-        _scene_members = self.hub_cache.scene_members.re
 
 
 class Rooms(PvPrompt):
@@ -254,6 +202,7 @@ class MainMenu(BasePrompt):
         self.register_commands({'c': Command(function_=self._connect_to_hub)})
         if hub:
             self._register_hub_commands()
+            self.request = AioRequest(hub, loop=self.loop)
         self._prompt = "PowerView toolkit: "
         self._hub_cache = None
 
@@ -272,7 +221,7 @@ class MainMenu(BasePrompt):
             info("Using {} as the PowerView hub ip address.".format(hub))
             self.request = AioRequest(hub, loop=self.loop)
             self._register_hub_commands()
-            self._hub_cache = HubCache(self.request)
+
 
             async def answer_no(*args, **kwargs):
                 LOGGER.debug('No entered.')
@@ -289,6 +238,7 @@ class MainMenu(BasePrompt):
 
     async def hub_cache(self, *args, **kwargs):
         LOGGER.debug('Querying the hub.')
+        self._hub_cache = HubCache(self.request)
         await self._hub_cache.update()
 
     async def shades(self, *args, **kwargs):
@@ -307,8 +257,6 @@ class MainMenu(BasePrompt):
         if self.request:
             self.loop.run_until_complete(self.request.websession.close())
 
-
-# logging.basicConfig(level=logging.DEBUG)
 
 
 def main():
