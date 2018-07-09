@@ -5,10 +5,14 @@ from typing import TYPE_CHECKING
 
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.helpers.api_base import ApiResource
-# from prompt_toolkit import prompt
-from prompt_toolkit import PromptSession
 
-from pv_prompt.print_output import info
+# from prompt_toolkit import prompt
+# from prompt_toolkit import PromptSession
+from prompt_toolkit.key_binding import KeyBindings
+
+from prompt_toolkit import prompt
+
+from pv_prompt.print_output import info, print_dict
 
 LOGGER = logging.getLogger(__name__)
 
@@ -31,12 +35,8 @@ class InvalidIdException(Exception):
 class Command:
     """Command class. Is bound to a key press."""
 
-    def __init__(self, function_=None, label=None,
-                 autoreturn=False):
+    def __init__(self, function_=None, label=None, autoreturn=False):
         self._function = function_ or self._empty
-        # if not asyncio.iscoroutine(self._function):
-        #     raise TypeError("function is not a coroutine: {}".format(
-        #         self._function.__name__))
         self.autoreturn = autoreturn
         self._label = label
 
@@ -54,11 +54,21 @@ class Command:
             return self._function.__name__
 
     def __repr__(self):
-        return '{}({},{},{}'.format(
+        return "{}({},{},{}".format(
             self.__class__.__name__,
             self._function.__name__,
             self.name,
-            self.autoreturn)
+            self.autoreturn,
+        )
+
+
+bindings = KeyBindings()
+
+
+@bindings.add("c-b")
+def _(event):
+    #LOGGER.debug("raising back exception.")
+    raise BackException()
 
 
 class BasePrompt:
@@ -68,8 +78,10 @@ class BasePrompt:
         else:
             self.loop = asyncio.get_event_loop()
         self._prompt = "Enter a command: "
-        self._commands = {'q': Command(function_=self.quit, label='(q)uit'),
-                          'b': Command(autoreturn=True, label='back')}
+        self._commands = {
+            "q": Command(function_=self.quit, label="(q)uit"),
+            "b": Command(autoreturn=True, label="back"),
+        }
         if commands:
             self.register_commands(commands)
         self._auto_return = False
@@ -79,18 +91,21 @@ class BasePrompt:
         return self._commands
 
     def _toolbar_string(self):
-        _str = ' | '.join(
-            ('({}) {}'.format(key, value.name) for key, value in
-             self._commands.items()))
+        _str = " | ".join(
+            (
+                "({}) {}".format(key, value.name)
+                for key, value in self._commands.items()
+            )
+        )
         return _str
 
     def register_commands(self, commands: dict):
         """Adds commands key strokes to watch in that context"""
         self._commands.update(commands)
 
-    async def current_prompt(self, prompt_=None, toolbar=None,
-                             autocomplete=None,
-                             autoreturn=False):
+    async def current_prompt(
+        self, prompt_=None, toolbar=None, autocomplete=None, autoreturn=False
+    ):
         """The currently active prompt.
 
         """
@@ -101,14 +116,23 @@ class BasePrompt:
             prompt_ = self._prompt
         try:
             while True:
-                prompt = PromptSession(prompt_, bottom_toolbar=self._toolbar_string,
-                                completer=autocomplete)
-                _command = await prompt.prompt(async_=True)
+                # prompt = PromptSession(
+                #     prompt_,
+                #     bottom_toolbar=self._toolbar_string,
+                #     completer=autocomplete,
+                # )
+                LOGGER.debug(bindings)
+                _command = await prompt(
+                    async_=True,
+                    bottom_toolbar=self._toolbar_string,
+                    key_bindings=bindings,
+                )
                 LOGGER.debug("received command: {}".format(_command))
                 _meth = self.commands.get(_command)
                 if _meth:
                     LOGGER.debug(
-                        "a method tied to this command: {}".format(_meth))
+                        "a method tied to this command: {}".format(_meth)
+                    )
                     val = await _meth(_command)
                     LOGGER.debug("method return with value: {}".format(val))
                     if _meth.autoreturn:
@@ -129,8 +153,9 @@ class BasePrompt:
 
 class PvPrompt(BasePrompt):
     # def __init__(self, request: AioRequest, commands=None):
-    def __init__(self, request: AioRequest, hub_cache: 'HubCache',
-                 commands=None):
+    def __init__(
+        self, request: AioRequest, hub_cache: "HubCache", commands=None
+    ):
         super().__init__(commands=commands)
         self.hub_cache = hub_cache
         self.request = request
@@ -138,22 +163,26 @@ class PvPrompt(BasePrompt):
         if request:
             self.hub_ip = request.hub_ip
         else:
-            self.hub_ip = 'not connected'
+            self.hub_ip = "not connected"
         self.api_resource = None
 
     def _toolbar_string(self):
         line1 = super()._toolbar_string()
-        return line1 + ' \nhub: {}'.format(self.hub_ip)
+        return line1 + " \nhub: {}".format(self.hub_ip)
 
 
 class PvResourcePrompt(PvPrompt):
-    def __init__(self, pv_resource: ApiResource, request: AioRequest,
-                 hub_cache: 'HubCache'):
+    def __init__(
+        self,
+        pv_resource: ApiResource,
+        request: AioRequest,
+        hub_cache: "HubCache",
+    ):
         super().__init__(request, hub_cache)
         self.pv_resource = pv_resource
         self.register_commands(
-            {'s': Command(function_=self.show_raw, label='(s)how raw')})
+            {"s": Command(function_=self.show_raw, label="(s)how raw")}
+        )
 
     async def show_raw(self, *args, **kwargs):
-        _str = json.dumps(self.pv_resource.raw_data, indent=4)
-        info(_str)
+        print_dict(self.pv_resource.raw_data)

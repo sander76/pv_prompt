@@ -1,4 +1,5 @@
 import asyncio
+
 from aiopvapi.helpers.aiorequest import AioRequest, PvApiConnectionError
 from aiopvapi.helpers.api_base import ApiEntryPoint
 from aiopvapi.rooms import Rooms as PvRooms
@@ -11,12 +12,18 @@ from pv_prompt.base_prompts import BasePrompt, InvalidIdException
 from pv_prompt.helpers import get_loop
 from pv_prompt.print_output import print_waiting_done
 
+import logging
+
+LOGGER = logging.getLogger(__name__)
+
 
 class ResourceCache:
-    def __init__(self,
-                 api_entry_point: ApiEntryPoint,
-                 resource_type_name: str,
-                 request: AioRequest):
+    def __init__(
+        self,
+        api_entry_point: ApiEntryPoint,
+        resource_type_name: str,
+        request: AioRequest,
+    ):
         self.request = request
         self.api_entry_point = api_entry_point
         self.resources = []
@@ -36,7 +43,8 @@ class ResourceCache:
 
     def _populate_id_suggestions(self):
         self.id_suggestions = WordCompleter(
-            [str(_item.id) for _item in self.resources])
+            [str(_item.id) for _item in self.resources]
+        )
 
     def find_by_id(self, id_: int):
         for _item in self.resources:
@@ -51,22 +59,39 @@ class ResourceCache:
             _id = int(_id)
             return self.find_by_id(_id)
         except ValueError:
-            raise InvalidIdException('Incorrect ID.')
+            raise InvalidIdException("Incorrect ID.")
+
+    def list_resources(self, filter=None):
+        """Generator expression.
+
+        Return a stream of items."""
+        if filter is None:
+            LOGGER.debug("No filter defined.")
+            filter = lambda x: True
+        LOGGER.debug("Resource count: %s", len(self.resources))
+        for _item in self.resources:
+            val = filter(_item)
+            LOGGER.debug("filter value: %s", val)
+            if val:
+                LOGGER.debug("yielding: %s", _item.name)
+                yield _item
 
     async def select_resource(self):
         base_prompt = BasePrompt()
-        resource = self._validate_id(await base_prompt.current_prompt(
-            "Select a {} id: ".format(self.resource_type_name),
-            toolbar="Enter a {} id.".format(self.resource_type_name),
-            autoreturn=True,
-            autocomplete=self.id_suggestions
+        resource = self._validate_id(
+            await base_prompt.current_prompt(
+                "Select a {} id: ".format(self.resource_type_name),
+                toolbar="Enter a {} id.".format(self.resource_type_name),
+                autoreturn=True,
+                autocomplete=self.id_suggestions,
+            )
         )
-                                     )
         return resource
 
     async def get_resource(self):
         done = print_waiting_done(
-            'getting {}s'.format(self.resource_type_name))
+            "getting {}s".format(self.resource_type_name)
+        )
         try:
 
             self.resources = await self.api_entry_point.get_instances()
@@ -78,12 +103,15 @@ class ResourceCache:
 
 
 class HubCache:
+    """Global state of the connected hub."""
+
     def __init__(self, request, loop=None):
-        self.shades = ResourceCache(PvShades(request), 'shade', request)
-        self.rooms = ResourceCache(PvRooms(request), 'room', request)
-        self.scenes = ResourceCache(PvScenes(request), 'scene', request)
+        self.shades = ResourceCache(PvShades(request), "shade", request)
+        self.rooms = ResourceCache(PvRooms(request), "room", request)
+        self.scenes = ResourceCache(PvScenes(request), "scene", request)
         self.scene_members = ResourceCache(
-            PvSceneMembers(request), 'scene member', request)
+            PvSceneMembers(request), "scene member", request
+        )
         self.loop = loop or get_loop()
 
     async def update(self):

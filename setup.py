@@ -29,7 +29,8 @@ setup(
     install_requires=["prompt_toolkit",
                       "aiopvapi",
                       "pysmb",
-                      'zeroconf']
+                      'zeroconf',
+                      'pygments']
     ,
     entry_points={
         'console_scripts': ['pv_prompt=pv_prompt.async_prompt:main']
