@@ -273,7 +273,12 @@ def main():
         help="Set a custom loglevel. default s 30 debug is 10",
         type=int,
     )
-    argparser.add_argument("--verbose", action="store_true", default=False)
+    argparser.add_argument(
+        "--verbose",
+        help="Verbose output on hub feedback",
+        action="store_true",
+        default=False,
+    )
     args = argparser.parse_args()
     logging.basicConfig(level=args.loglevel)
 
