@@ -68,6 +68,8 @@ class Scenes(PvPrompt):
 
 
 class CreateScene(PvPrompt):
+    """Create scene context."""
+
     def __init__(self, request, hub_cache: HubCache):
         super().__init__(request, hub_cache)
         self.api_resource = hub_cache.scenes
@@ -83,12 +85,15 @@ class CreateScene(PvPrompt):
         self._scene_name = None
 
     async def print_selection(self):
+        """Print selection."""
         if self._room:
             print_table("room:", self._room.name, self._room.id)
         if self._scene_name:
             print_table("scene name:", self._scene_name)
 
     async def create_scene(self, *args, **kwargs):
+        """Create an empty scene."""
+        info("Creating an empty scene")
         scenes_obj = self.hub_cache.scenes.api_entry_point
         _scene = await scenes_obj.create_scene(self._room.id, self._scene_name)
         if VERBOSE:
@@ -97,6 +102,7 @@ class CreateScene(PvPrompt):
         await self.hub_cache.scenes.get_resource()
 
     async def select_room(self, *args, **kwargs):
+        """Select a room."""
         print_resource_data(self.hub_cache.rooms)
         try:
             self._room = await self.hub_cache.rooms.select_resource()
@@ -105,6 +111,7 @@ class CreateScene(PvPrompt):
             warn(err)
 
     async def enter_name(self, *args, **kwargs):
+        """Define scene name."""
         base = BasePrompt()
         self._scene_name = await base.current_prompt(
             prompt_="Enter a scene name: ", autoreturn=True
@@ -116,6 +123,8 @@ class CreateScene(PvPrompt):
 
 
 class Scene(PvResourcePrompt):
+    """Scene context."""
+
     def __init__(self, scene: PvScene, request, hub_cache):
         super().__init__(scene, request, hub_cache)
         self._prompt = "scene {} {}:".format(scene.id, scene.name)

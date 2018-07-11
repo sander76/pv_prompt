@@ -18,6 +18,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 class ResourceCache:
+    """PowerView resource cache."""
     def __init__(
         self,
         api_entry_point: ApiEntryPoint,
@@ -115,6 +116,7 @@ class HubCache:
         self.loop = loop or get_loop()
 
     async def update(self):
+        """Update the hub cache."""
         await self.shades.get_resource()
         await self.rooms.get_resource()
         await self.scenes.get_resource()

@@ -25,16 +25,18 @@ class Zero:
         try:
             await hub.query_user_data()
         except PvApiResponseStatusError as err:
-            warn('hub {} {} does not respond.'.format(hub.name,hub.ip))
+            warn("hub {} {} does not respond.".format(hub.name, hub.ip))
             self.hubs.remove(hub)
         finally:
             await hub.request.websession.close()
 
     async def discover(self, wait_for=5):
-        LOGGER.debug('starting discovery')
+        LOGGER.debug("starting discovery")
         self.browser = ServiceBrowser(
-            self._zeroconf, "_powerview._tcp.local.",
-            handlers=[self.on_service_state_change])
+            self._zeroconf,
+            "_powerview._tcp.local.",
+            handlers=[self.on_service_state_change],
+        )
 
         LOGGER.debug("waiting for {} seconds".format(wait_for))
         await asyncio.sleep(wait_for)
@@ -48,10 +50,13 @@ class Zero:
         except PvApiResponseStatusError as err:
             LOGGER.error(err)
 
-    def on_service_state_change(self, zeroconf, service_type, name,
-                                state_change):
-        LOGGER.debug("Service %s of type %s state changed: %s" % (
-            name, service_type, state_change))
+    def on_service_state_change(
+        self, zeroconf, service_type, name, state_change
+    ):
+        LOGGER.debug(
+            "Service %s of type %s state changed: %s"
+            % (name, service_type, state_change)
+        )
 
         if state_change is ServiceStateChange.Added:
             info = zeroconf.get_service_info(service_type, name)
@@ -62,25 +67,5 @@ class Zero:
                 hub = Hub(request)
                 self.hubs.append(hub)
                 self._tasks.append(
-                    self._loop.create_task(self.add_update_task(hub)))
-
-# if __name__ == '__main__':
-#     z = Zero()
-#     z.discover()
-#     # logging.basicConfig(level=logging.DEBUG)
-#     # if len(sys.argv) > 1:
-#     #     assert sys.argv[1:] == ['--debug']
-#     #     logging.getLogger('zeroconf').setLevel(logging.DEBUG)
-#     #
-#     # zeroconf = Zeroconf()
-#     # print("\nBrowsing services, press Ctrl-C to exit...\n")
-#     # browser = ServiceBrowser(zeroconf, "_powerview._tcp.local.",
-#     #                          handlers=[on_service_state_change])
-#     #
-#     # try:
-#     #     sleep(5)
-#     #     zeroconf.close()
-#     # except KeyboardInterrupt:
-#     #     pass
-#     # finally:
-#     #     zeroconf.close()
+                    self._loop.create_task(self.add_update_task(hub))
+                )

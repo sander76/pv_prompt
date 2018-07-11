@@ -79,7 +79,7 @@ def print_dict(data: dict):
 
 
 def print_scenes(scenes: "ResourceCache", rooms):
-    LOGGER.debug("verbose: %s",VERBOSE)
+    LOGGER.debug("verbose: %s", VERBOSE)
     if VERBOSE:
         print("")
         for itm in scenes.resources:
@@ -111,19 +111,6 @@ def print_shade_data(shades: Iterable):
         count += 1
         print_table(_item.name, _item.id, _item.shade_type.description)
     print_length(count)
-
-
-# def print_resource_data(scene_members: ResourceCache, shades: ResourceCache,
-#                         scenes: ResourceCache):
-
-
-# print("")
-#         print_table('SHADE', 'SCENE')
-#         for _item in self.resources:
-#             _shade = self.shades.get_name_by_id(_item.shade_id)
-#             _scene = self.scenes.get_name_by_id(_item.scene_id)
-#             print_table(_shade.name, _scene.name)
-#         self.print_length()
 
 
 def print_resource_data(resource):

@@ -1,18 +1,15 @@
 import asyncio
-import json
 import logging
 from typing import TYPE_CHECKING
 
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.helpers.api_base import ApiResource
-
+from prompt_toolkit import prompt
 # from prompt_toolkit import prompt
 # from prompt_toolkit import PromptSession
 from prompt_toolkit.key_binding import KeyBindings
 
-from prompt_toolkit import prompt
-
-from pv_prompt.print_output import info, print_dict
+from pv_prompt.print_output import print_dict
 
 LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +64,7 @@ bindings = KeyBindings()
 
 @bindings.add("c-b")
 def _(event):
-    #LOGGER.debug("raising back exception.")
+    # LOGGER.debug("raising back exception.")
     raise BackException()
 
 
@@ -104,7 +101,8 @@ class BasePrompt:
         self._commands.update(commands)
 
     async def current_prompt(
-        self, prompt_=None, toolbar=None, autocomplete=None, autoreturn=False
+            self, prompt_=None, toolbar=None, autocomplete=None,
+            autoreturn=False
     ):
         """The currently active prompt.
 
@@ -116,13 +114,9 @@ class BasePrompt:
             prompt_ = self._prompt
         try:
             while True:
-                # prompt = PromptSession(
-                #     prompt_,
-                #     bottom_toolbar=self._toolbar_string,
-                #     completer=autocomplete,
-                # )
                 LOGGER.debug(bindings)
                 _command = await prompt(
+                    prompt_,
                     async_=True,
                     bottom_toolbar=self._toolbar_string,
                     key_bindings=bindings,
@@ -151,10 +145,25 @@ class BasePrompt:
         raise QuitException()
 
 
+class YesNoPrompt(BasePrompt):
+    def __init__(self):
+        super().__init__()
+        self.register_commands({
+            "y": Command(function_=self.yes, autoreturn=True, label="(y)es"),
+            "n": Command(function_=self.no, autoreturn=True, label="(n)o")
+        })
+
+    async def yes(self, *args, **kwargs):
+        return True
+
+    async def no(self, *args, **kwargs):
+        return False
+
+
 class PvPrompt(BasePrompt):
     # def __init__(self, request: AioRequest, commands=None):
     def __init__(
-        self, request: AioRequest, hub_cache: "HubCache", commands=None
+            self, request: AioRequest, hub_cache: "HubCache", commands=None
     ):
         super().__init__(commands=commands)
         self.hub_cache = hub_cache
@@ -173,10 +182,10 @@ class PvPrompt(BasePrompt):
 
 class PvResourcePrompt(PvPrompt):
     def __init__(
-        self,
-        pv_resource: ApiResource,
-        request: AioRequest,
-        hub_cache: "HubCache",
+            self,
+            pv_resource: ApiResource,
+            request: AioRequest,
+            hub_cache: "HubCache",
     ):
         super().__init__(request, hub_cache)
         self.pv_resource = pv_resource
