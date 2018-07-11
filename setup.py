@@ -32,6 +32,7 @@ setup(
         "pysmb",
         "zeroconf",
         "pygments",
+        "pyserial"
     ],
     entry_points={
         "console_scripts": [
