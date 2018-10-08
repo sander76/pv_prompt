@@ -7,7 +7,6 @@ _LOOP = None
 _VERBOSE = False
 
 
-@property
 def VERBOSE():
     return _VERBOSE
 

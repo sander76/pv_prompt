@@ -4,8 +4,13 @@ import asyncio
 import logging
 from enum import Enum
 
+from prompt_toolkit.completion import WordCompleter
 from serial import Serial
 from serial.serialutil import SerialException
+from serial.tools.list_ports import comports
+
+from pv_prompt.base_prompts import BasePrompt, Command
+from pv_prompt.print_output import info
 
 LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +26,7 @@ def byte_to_string_rep(byte_instance):
     return _string_rep
 
 
-def get_id(powerview_id=12896):
+def get_id(powerview_id=17520):
     return _from_int(powerview_id)
 
 
@@ -42,6 +47,7 @@ class NordicSerial:
 
     def __init__(self, loop, serial_port, serial_speed=38400):
         self.network_id = byte_to_string_rep(get_id())
+
         self.id_change = b"\x00\x03i" + get_id()
         self.id_change_response = b"\x03i" + get_id()
 
@@ -186,25 +192,46 @@ class NordicSerial:
             LOGGER.debug("Serial response: %s", response)
             return response
 
-    # @asyncio.coroutine
-    # def send_nordic(self, request):
-    #     LOGGER.debug("Request received from User interface")
-    #     rq = yield from request.json()
-    #     commands = rq["commands"]
-    #     # incoming is a list of commands. First command has simpler structure
-    #     # and parsing is simpler so this bool keeps track whether to do the
-    #     # first parsing or the other parsing.
-    #     first = True
-    #     for cmd in commands:
-    #         if first:
-    #             upstring = Nd[cmd].value
-    #             first = False
-    #         else:
-    #             upstring = Nd[cmd["command"]].value
-    #             delay = cmd.get("delay", SLEEP_BETWEEN_COMMANDS)
-    #             yield from asyncio.sleep(delay)
-    #         if upstring == Nd.SET_DONGLE_ID.value:
-    #             yield from self.send_dongle_id()
-    #         else:
-    #             yield from self.send_queue.put(upstring)
-    #     return web.Response(body=b"okay")
+
+class Connect(BasePrompt):
+    ATTR_VID = "vid"
+    ATTR_PID = "pid"
+    ATTR_NAME = "name"
+
+    dongles = [
+        {ATTR_VID: 1027, ATTR_PID: 24597, ATTR_NAME: "Bremerhaven dongle"},
+        {ATTR_VID: 4966, ATTR_PID: 4117, ATTR_NAME: "Nordic dongle"},
+    ]
+
+    def __init__(self):
+        commands = {
+            "s": Command(function_=self.search_port),
+            "c": Command(function_=self.connect, autoreturn=True)
+        }
+        super().__init__(commands=commands)
+        self.port_suggestions = []
+        self.port = None
+
+    async def search_port(self, *args, **kwargs):
+        for i in comports():
+            for _dongle in self.dongles:
+                if (
+                        i.pid == _dongle[self.ATTR_PID]
+                        and i.vid == _dongle[self.ATTR_VID]
+                ):
+                    info(
+                        "Serial port found. vid: {} pid: {} name: {}".format(
+                            i.pid, i.vid, i.device
+                        )
+                    )
+                    self.port_suggestions.append(i.device)
+
+    async def connect(self, *args, **kwargs):
+        base_prompt = BasePrompt()
+        port = await base_prompt.current_prompt(
+            "Enter serial port: ",
+            autoreturn=True,
+            autocomplete=WordCompleter(self.port_suggestions),
+        )
+
+        return port

@@ -10,10 +10,11 @@ from pv_prompt.base_prompts import (
     YesNoPrompt,
     QuitException,
 )
-from pv_prompt.dongle.dongle import NordicSerial, State
+from pv_prompt.dongle.dongle import State, Connect, NordicSerial
 from pv_prompt.dongle.nordic import Nd
 from pv_prompt.helpers import set_verbosity
-from pv_prompt.print_output import info, warn, print_waiting_done
+from pv_prompt.print_output import info, warn, print_waiting_done, \
+    print_key_values
 
 LOGGER = logging.getLogger(__name__)
 
@@ -29,8 +30,12 @@ class MainMenu(BasePrompt):
         super().__init__()
 
         self._prompt = "Dongle toolkit: "
-        self.s = NordicSerial(loop, port)
+
         self._register_commands()
+        self._port = port
+        self.s = None
+
+        # self.s = NordicSerial(loop, port)
 
     def _register_commands(self):
         self.register_commands(
@@ -44,13 +49,20 @@ class MainMenu(BasePrompt):
         )
 
     async def _connect_dongle(self):
+        if not self._port:
+            _port = await Connect().current_prompt()
+            if _port:
+                self._port = _port
+        self.s = NordicSerial(self.loop, self._port)
+        print_key_values('network id', self.s.network_id)
         done = print_waiting_done("Connecting to dongle")
         while not self.s.state == State.connected:
             await asyncio.sleep(0.5)
         await done()
 
     async def current_prompt(
-        self, prompt_=None, toolbar=None, autocomplete=None, autoreturn=False
+            self, prompt_=None, toolbar=None, autocomplete=None,
+            autoreturn=False
     ):
         await self._connect_dongle()
 

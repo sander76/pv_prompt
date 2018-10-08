@@ -1,8 +1,10 @@
 import logging
 
+from aiopvapi.helpers.aiorequest import PvApiError
 from aiopvapi.helpers.constants import ATTR_ROOM_ID
 from aiopvapi.resources.scene import Scene as PvScene
 from aiopvapi.scene_members import SceneMembers
+
 
 # from pv_prompt.glob import VERBOSE
 from pv_prompt.base_prompts import (
@@ -53,6 +55,8 @@ class Scenes(PvPrompt):
 
         except InvalidIdException as err:
             warn(err)
+        except PvApiError as err:
+            warn(err)
 
     async def select_scene(self, *args, **kwargs):
         try:
@@ -94,27 +98,34 @@ class CreateScene(PvPrompt):
     async def create_scene(self, *args, **kwargs):
         """Create an empty scene."""
         info("Creating an empty scene")
+        # await self.select_room(default=self._room)
+        await self.enter_name(default=self._scene_name)
+
         scenes_obj = self.hub_cache.scenes.api_entry_point
         _scene = await scenes_obj.create_scene(self._room.id, self._scene_name)
-        if VERBOSE:
+        if VERBOSE():
             print_dict(_scene)
         # update the scene cache.
         await self.hub_cache.scenes.get_resource()
 
     async def select_room(self, *args, **kwargs):
+        default = kwargs.get("default")
         """Select a room."""
         print_resource_data(self.hub_cache.rooms)
         try:
-            self._room = await self.hub_cache.rooms.select_resource()
+            self._room = await self.hub_cache.rooms.select_resource(
+                default=default
+            )
             await self.print_selection()
         except InvalidIdException as err:
             warn(err)
 
     async def enter_name(self, *args, **kwargs):
         """Define scene name."""
+        default = kwargs.get("default")
         base = BasePrompt()
         self._scene_name = await base.current_prompt(
-            prompt_="Enter a scene name: ", autoreturn=True
+            prompt_="Enter a scene name: ", autoreturn=True, default=default
         )
         await self.print_selection()
 
@@ -137,12 +148,13 @@ class Scene(PvResourcePrompt):
         )
 
     async def add_shade_to_scene(self, *args, **kwargs):
-        #
         shade = await self.hub_cache.shades.select_resource()
         _position = await shade.get_current_position()
+        _scene_id = self.pv_resource.id
+        _shade_id = shade.id
         if _position:
             await (SceneMembers(self.request)).create_scene_member(
-                _position, self.api_resource.id, shade.id
+                _position, self.pv_resource.id, shade.id
             )
         info("Scene created.")
 
@@ -157,14 +169,5 @@ class Scene(PvResourcePrompt):
             LOGGER.debug("No match")
             return False
 
-        # _shades =
-        # LOGGER.debug(_shades)
         print_shade_data(self.hub_cache.shades.list_resources(filter=filter))
 
-    # async def show_members(self, *args, **kwargs):
-    #     scene_id = self.pv_resource.id
-    #     LOGGER.debug("filtering by scene id: %s", scene_id)
-    #     def filter(item):
-    #         if item._raw_data
-    #     info("getting scene members")
-    #     _scene_members = self.hub_cache.scene_members.re

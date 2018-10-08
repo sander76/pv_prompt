@@ -5,11 +5,12 @@ from typing import TYPE_CHECKING
 from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.helpers.api_base import ApiResource
 from prompt_toolkit import prompt
+
 # from prompt_toolkit import prompt
 # from prompt_toolkit import PromptSession
 from prompt_toolkit.key_binding import KeyBindings
 
-from pv_prompt.print_output import print_dict
+from pv_prompt.print_output import print_dict, print_key_values
 
 LOGGER = logging.getLogger(__name__)
 
@@ -101,8 +102,12 @@ class BasePrompt:
         self._commands.update(commands)
 
     async def current_prompt(
-            self, prompt_=None, toolbar=None, autocomplete=None,
-            autoreturn=False
+        self,
+        prompt_=None,
+        toolbar=None,
+        autocomplete=None,
+        autoreturn=False,
+        default=None,
     ):
         """The currently active prompt.
 
@@ -120,6 +125,8 @@ class BasePrompt:
                     async_=True,
                     bottom_toolbar=self._toolbar_string,
                     key_bindings=bindings,
+                    completer=autocomplete,
+                    default=default,
                 )
                 LOGGER.debug("received command: {}".format(_command))
                 _meth = self.commands.get(_command)
@@ -148,10 +155,14 @@ class BasePrompt:
 class YesNoPrompt(BasePrompt):
     def __init__(self):
         super().__init__()
-        self.register_commands({
-            "y": Command(function_=self.yes, autoreturn=True, label="(y)es"),
-            "n": Command(function_=self.no, autoreturn=True, label="(n)o")
-        })
+        self.register_commands(
+            {
+                "y": Command(
+                    function_=self.yes, autoreturn=True, label="(y)es"
+                ),
+                "n": Command(function_=self.no, autoreturn=True, label="(n)o"),
+            }
+        )
 
     async def yes(self, *args, **kwargs):
         return True
@@ -160,20 +171,57 @@ class YesNoPrompt(BasePrompt):
         return False
 
 
+class NumberPrompt(BasePrompt):
+    pass
+
+
+class ListPrompt(BasePrompt):
+    def __init__(self, items):
+        super().__init__()
+        self.items = items
+        self.list_items()
+
+    def list_items(self):
+        items = {}
+        for idx, item in enumerate(self.items):
+            print_key_values(idx, item)
+            items[str(idx)] = Command(
+                function_=self.return_item(idx),
+                label=str(idx),
+                autoreturn=True,
+            )
+
+        self.register_commands(items)
+
+    def return_item(self, idx):
+        """Wrapper return list item."""
+        LOGGER.debug("Registering item with id: %s", idx)
+
+        async def _wrapped(*args, **kwargs):
+            return self.items[idx]
+
+        return _wrapped
+
+
 class PvPrompt(BasePrompt):
     # def __init__(self, request: AioRequest, commands=None):
     def __init__(
-            self, request: AioRequest, hub_cache: "HubCache", commands=None
+        self, request: AioRequest, hub_cache: "HubCache", commands=None
     ):
         super().__init__(commands=commands)
         self.hub_cache = hub_cache
         self.request = request
-
+        self.register_commands(
+            {"r": Command(function_=self.refresh, label="refresh")}
+        )
         if request:
             self.hub_ip = request.hub_ip
         else:
             self.hub_ip = "not connected"
         self.api_resource = None
+
+    async def refresh(self, *args, **kwargs):
+        await self.hub_cache.update()
 
     def _toolbar_string(self):
         line1 = super()._toolbar_string()
@@ -182,10 +230,10 @@ class PvPrompt(BasePrompt):
 
 class PvResourcePrompt(PvPrompt):
     def __init__(
-            self,
-            pv_resource: ApiResource,
-            request: AioRequest,
-            hub_cache: "HubCache",
+        self,
+        pv_resource: ApiResource,
+        request: AioRequest,
+        hub_cache: "HubCache",
     ):
         super().__init__(request, hub_cache)
         self.pv_resource = pv_resource

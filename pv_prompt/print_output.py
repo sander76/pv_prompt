@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-
 from asyncio import CancelledError
 from typing import TYPE_CHECKING, Iterable
 
@@ -56,7 +55,6 @@ def print_waiting_done(action):
         try:
             while True:
                 await asyncio.sleep(0.5)
-                LOGGER.debug("spinning")
                 spinner()
         except CancelledError:
             pass
@@ -80,16 +78,21 @@ def print_dict(data: dict):
 
 def print_scenes(scenes: "ResourceCache", rooms):
     LOGGER.debug("verbose: %s", VERBOSE)
-    if VERBOSE:
+    if VERBOSE():
         print("")
         for itm in scenes.resources:
             print_dict(itm._raw_data)
     print("")
     LOGGER.debug("printing scenes")
-    print_table("NAME", "ID", "ROOM")
-    print_table("----", "--", "----")
+    print_table("NAME", "ID", "ROOM", "NETWORK_ID")
+    print_table("----", "--", "----", "----------")
     tbl = [
-        (_item.name, _item.id, rooms.get_name_by_id(_item.room_id))
+        (
+            _item.name,
+            _item.id,
+            rooms.get_name_by_id(_item.room_id),
+            _item._raw_data["networkNumber"],
+        )
         for _item in scenes.resources
     ]
     tbl.sort(key=lambda x: x[-1])
@@ -102,7 +105,10 @@ def print_scenes(scenes: "ResourceCache", rooms):
 def print_shade_data(shades: Iterable):
     """Prints a list of shades.
     """
-    print("")
+    if VERBOSE():
+        print("")
+        for itm in shades:
+            print_dict(itm._raw_data)
     print_table("NAME", "ID", "TYPE")
     print_table("----", "--", "----")
     count = 0

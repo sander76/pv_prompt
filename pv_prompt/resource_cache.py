@@ -19,6 +19,7 @@ LOGGER = logging.getLogger(__name__)
 
 class ResourceCache:
     """PowerView resource cache."""
+
     def __init__(
         self,
         api_entry_point: ApiEntryPoint,
@@ -77,7 +78,7 @@ class ResourceCache:
                 LOGGER.debug("yielding: %s", _item.name)
                 yield _item
 
-    async def select_resource(self):
+    async def select_resource(self, default=None):
         base_prompt = BasePrompt()
         resource = self._validate_id(
             await base_prompt.current_prompt(
@@ -85,6 +86,7 @@ class ResourceCache:
                 toolbar="Enter a {} id.".format(self.resource_type_name),
                 autoreturn=True,
                 autocomplete=self.id_suggestions,
+                default=default,
             )
         )
         return resource
