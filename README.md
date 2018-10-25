@@ -10,7 +10,7 @@ Python >=3.5 needs to be installed.
 pip install pv-prompt
 ```
 
-
+## Usage
 
 Start the tool by entering in the command line.
 
