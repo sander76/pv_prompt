@@ -1,10 +1,7 @@
-# Created by .ignore support plugin (hsz.mobi)
-### Python template
-
-
 env
 .idea
 build
 dist
 venv
+bin
 pv_prompt.egg-info

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # Note: To use the 'upload' functionality of this file, you must:
@@ -18,7 +18,7 @@ URL = "https://github.com/sander76/pv_prompt"
 EMAIL = None
 AUTHOR = "Sander Teunissen"
 REQUIRES_PYTHON = ">=3.5.0"
-VERSION = 1.9
+VERSION = "1.9.3"
 
 # What packages are required for this module to be executed?
 REQUIRED = [
@@ -91,9 +91,9 @@ class UploadCommand(Command):
         self.status("Uploading the package to PyPI via Twine…")
         os.system("twine upload dist/*")
 
-        self.status("Pushing git tags…")
-        os.system("git tag v{0}".format(about["__version__"]))
-        os.system("git push --tags")
+        # self.status("Pushing git tags…")
+        # os.system("git tag v{0}".format(about["__version__"]))
+        # os.system("git push --tags")
 
         sys.exit()
 
@@ -131,7 +131,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "pv_prompt=pv_prompt.async_prompt:main",
+            "pvprompt=pv_prompt.async_prompt:main",
             "pv_dongle=pv_prompt.dongle.start:main",
         ]
     },
