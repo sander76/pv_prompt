@@ -4,17 +4,11 @@ from argparse import ArgumentParser
 
 from prompt_toolkit.eventloop import use_asyncio_event_loop
 
-from pv_prompt.base_prompts import (
-    BasePrompt,
-    Command,
-    YesNoPrompt,
-    QuitException,
-)
+from pv_prompt.base_prompts import BasePrompt, Command, YesNoPrompt, QuitException
 from pv_prompt.dongle.dongle import State, Connect, NordicSerial
 from pv_prompt.dongle.nordic import Nd
 from pv_prompt.helpers import set_verbosity
-from pv_prompt.print_output import info, warn, print_waiting_done, \
-    print_key_values
+from pv_prompt.print_output import info, warn, print_waiting_done, print_key_values
 
 LOGGER = logging.getLogger(__name__)
 
@@ -42,9 +36,7 @@ class MainMenu(BasePrompt):
             {
                 "c": Command(function_=self._connect_shade, label="(c)onnect"),
                 "j": Command(function_=self._jog, label="(j)og"),
-                "e": Command(
-                    function_=self._query_scenes, label="qu(e)ry scenes"
-                ),
+                "e": Command(function_=self._query_scenes, label="qu(e)ry scenes"),
             }
         )
 
@@ -54,21 +46,18 @@ class MainMenu(BasePrompt):
             if _port:
                 self._port = _port
         self.s = NordicSerial(self.loop, self._port)
-        print_key_values('network id', self.s.network_id)
+        print_key_values("network id", self.s.network_id)
         done = print_waiting_done("Connecting to dongle")
         while not self.s.state == State.connected:
             await asyncio.sleep(0.5)
         await done()
 
     async def current_prompt(
-            self, prompt_=None, toolbar=None, autocomplete=None,
-            autoreturn=False
+        self, prompt_=None, toolbar=None, autocomplete=None, autoreturn=False
     ):
         await self._connect_dongle()
 
-        await super().current_prompt(
-            prompt_, toolbar, autocomplete, autoreturn
-        )
+        await super().current_prompt(prompt_, toolbar, autocomplete, autoreturn)
 
     async def _query_scenes(self, *args, **kwargs):
         done = print_waiting_done("Moving to open position")
@@ -97,9 +86,7 @@ class MainMenu(BasePrompt):
         await self.s.write_to_nordic(Nd.GROUP_ADD.value)
 
         yesno = YesNoPrompt()
-        confirm = await yesno.current_prompt(
-            prompt_="Did the shade jog? <y/n> "
-        )
+        confirm = await yesno.current_prompt(prompt_="Did the shade jog? <y/n> ")
         if confirm:
             info("Shade connected")
         else:

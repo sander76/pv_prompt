@@ -44,9 +44,7 @@ class ResourceCache:
                 return _item.name
 
     def _populate_id_suggestions(self):
-        self.id_suggestions = WordCompleter(
-            [str(_item.id) for _item in self.resources]
-        )
+        self.id_suggestions = WordCompleter([str(_item.id) for _item in self.resources])
 
     def find_by_id(self, id_: int):
         for _item in self.resources:
@@ -92,9 +90,7 @@ class ResourceCache:
         return resource
 
     async def get_resource(self):
-        done = print_waiting_done(
-            "getting {}s".format(self.resource_type_name)
-        )
+        done = print_waiting_done("getting {}s".format(self.resource_type_name))
         try:
 
             self.resources = await self.api_entry_point.get_instances()

@@ -27,9 +27,7 @@ def print_table(*values):
     _columns = len(values)
     # _first = '  <green>{:<15}</green>'
     # _second = '<orange>{:<15}</orange>' * (_columns - 1)
-    _full = "  <green>{:<15}</green>" + "<orange>{:<15}</orange>" * (
-        _columns - 1
-    )
+    _full = "  <green>{:<15}</green>" + "<orange>{:<15}</orange>" * (_columns - 1)
     print_formatted_text(HTML(_full.format(*values)))
 
 

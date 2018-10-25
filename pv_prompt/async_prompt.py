@@ -4,19 +4,10 @@ from argparse import ArgumentParser
 from aiopvapi.helpers.aiorequest import AioRequest
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 
-from pv_prompt.base_prompts import (
-    BasePrompt,
-    PvPrompt,
-    QuitException,
-    Command,
-)
+from pv_prompt.base_prompts import BasePrompt, PvPrompt, QuitException, Command
 from pv_prompt.discovery import Discovery
 from pv_prompt.helpers import get_loop, set_verbosity, VERBOSE
-from pv_prompt.print_output import (
-    info,
-    print_resource_data,
-    print_key_values,
-)
+from pv_prompt.print_output import info, print_resource_data, print_key_values
 from pv_prompt.resource_cache import HubCache
 from pv_prompt.scenes import Scenes
 from pv_prompt.shades import Shades
@@ -135,9 +126,7 @@ def main():
     use_asyncio_event_loop()
 
     argparser = ArgumentParser()
-    argparser.add_argument(
-        "--hubip", help="The ip address of the hub", default=None
-    )
+    argparser.add_argument("--hubip", help="The ip address of the hub", default=None)
     argparser.add_argument(
         "--loglevel",
         default=30,

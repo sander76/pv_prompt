@@ -31,9 +31,7 @@ class Discovery(BasePrompt):
 
         resolver = asyncdns.MulticastResolver()
 
-        query = asyncdns.Query(
-            "_powerview._tcp.local.", asyncdns.ANY, asyncdns.IN
-        )
+        query = asyncdns.Query("_powerview._tcp.local.", asyncdns.ANY, asyncdns.IN)
         done = print_waiting_done("Discovering hubs")
 
         r = await resolver.lookup(query)

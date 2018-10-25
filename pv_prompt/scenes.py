@@ -113,9 +113,7 @@ class CreateScene(PvPrompt):
         """Select a room."""
         print_resource_data(self.hub_cache.rooms)
         try:
-            self._room = await self.hub_cache.rooms.select_resource(
-                default=default
-            )
+            self._room = await self.hub_cache.rooms.select_resource(default=default)
             await self.print_selection()
         except InvalidIdException as err:
             warn(err)
@@ -170,4 +168,3 @@ class Scene(PvResourcePrompt):
             return False
 
         print_shade_data(self.hub_cache.shades.list_resources(filter=filter))
-

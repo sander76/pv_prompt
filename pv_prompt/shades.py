@@ -7,11 +7,7 @@ from aiopvapi.helpers.constants import (
     ATTR_POSKIND2,
     ATTR_POSITION2,
 )
-from aiopvapi.resources.shade import (
-    BaseShade,
-    ShadeBottomUpTiltAnywhere,
-    MAX_POSITION,
-)
+from aiopvapi.resources.shade import BaseShade, ShadeBottomUpTiltAnywhere, MAX_POSITION
 from prompt_toolkit.completion import WordCompleter
 
 from pv_prompt.base_prompts import (
@@ -27,7 +23,8 @@ from pv_prompt.print_output import (
     print_shade_data,
     warn,
     print_key_values,
-    print_waiting_done)
+    print_waiting_done,
+)
 from pv_prompt.resource_cache import HubCache
 
 LOGGER = logging.getLogger(__name__)
@@ -48,10 +45,7 @@ class Shade(PvResourcePrompt):
         )
         if shade.can_move:
             self.register_commands(
-                {
-                    "o": Command(function_=self.open),
-                    "c": Command(function_=self.close),
-                }
+                {"o": Command(function_=self.open), "c": Command(function_=self.close)}
             )
         if shade.can_tilt:
             self.register_commands(
@@ -106,7 +100,7 @@ class Shades(PvPrompt):
 
     async def _list_shades(self, *args, **kwargs):
         await self.hub_cache.shades.get_resource()
-        info('')  # print a newline
+        info("")  # print a newline
         print_shade_data(self.hub_cache.shades)
 
     async def _select_shade(self, *args, **kwargs):
@@ -128,8 +122,7 @@ class Position(PvPrompt):
         self.register_commands(
             {
                 "l": Command(
-                    function_=self._list_positions,
-                    label="Select allowed position",
+                    function_=self._list_positions, label="Select allowed position"
                 ),
                 "m": Command(function_=self.move),
             }
@@ -160,9 +153,7 @@ class Position(PvPrompt):
 
     async def _list_positions(self, *args, **kwargs):
         positions = ListPrompt(self._shade.allowed_positions)
-        self._position = await positions.current_prompt(
-            "Select an allowed position"
-        )
+        self._position = await positions.current_prompt("Select an allowed position")
         self._print_position(self._position)
 
     async def put_values(self, *args, **kwargs):

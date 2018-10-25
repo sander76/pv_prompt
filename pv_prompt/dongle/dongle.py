@@ -110,9 +110,7 @@ class NordicSerial:
                 self.connect_attempts,
             )
             if self.s is None:
-                self.s = Serial(
-                    self.port, baudrate=self.serial_speed, timeout=0
-                )
+                self.s = Serial(self.port, baudrate=self.serial_speed, timeout=0)
             else:
                 self.s.open()
 
@@ -206,7 +204,7 @@ class Connect(BasePrompt):
     def __init__(self):
         commands = {
             "s": Command(function_=self.search_port),
-            "c": Command(function_=self.connect, autoreturn=True)
+            "c": Command(function_=self.connect, autoreturn=True),
         }
         super().__init__(commands=commands)
         self.port_suggestions = []
@@ -215,10 +213,7 @@ class Connect(BasePrompt):
     async def search_port(self, *args, **kwargs):
         for i in comports():
             for _dongle in self.dongles:
-                if (
-                        i.pid == _dongle[self.ATTR_PID]
-                        and i.vid == _dongle[self.ATTR_VID]
-                ):
+                if i.pid == _dongle[self.ATTR_PID] and i.vid == _dongle[self.ATTR_VID]:
                     info(
                         "Serial port found. vid: {} pid: {} name: {}".format(
                             i.pid, i.vid, i.device

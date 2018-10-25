@@ -53,10 +53,7 @@ class Command:
 
     def __repr__(self):
         return "{}({},{},{}".format(
-            self.__class__.__name__,
-            self._function.__name__,
-            self.name,
-            self.autoreturn,
+            self.__class__.__name__, self._function.__name__, self.name, self.autoreturn
         )
 
 
@@ -90,10 +87,7 @@ class BasePrompt:
 
     def _toolbar_string(self):
         _str = " | ".join(
-            (
-                "({}) {}".format(key, value.name)
-                for key, value in self._commands.items()
-            )
+            ("({}) {}".format(key, value.name) for key, value in self._commands.items())
         )
         return _str
 
@@ -131,9 +125,7 @@ class BasePrompt:
                 LOGGER.debug("received command: {}".format(_command))
                 _meth = self.commands.get(_command)
                 if _meth:
-                    LOGGER.debug(
-                        "a method tied to this command: {}".format(_meth)
-                    )
+                    LOGGER.debug("a method tied to this command: {}".format(_meth))
                     val = await _meth(_command)
                     LOGGER.debug("method return with value: {}".format(val))
                     if _meth.autoreturn:
@@ -157,9 +149,7 @@ class YesNoPrompt(BasePrompt):
         super().__init__()
         self.register_commands(
             {
-                "y": Command(
-                    function_=self.yes, autoreturn=True, label="(y)es"
-                ),
+                "y": Command(function_=self.yes, autoreturn=True, label="(y)es"),
                 "n": Command(function_=self.no, autoreturn=True, label="(n)o"),
             }
         )
@@ -186,9 +176,7 @@ class ListPrompt(BasePrompt):
         for idx, item in enumerate(self.items):
             print_key_values(idx, item)
             items[str(idx)] = Command(
-                function_=self.return_item(idx),
-                label=str(idx),
-                autoreturn=True,
+                function_=self.return_item(idx), label=str(idx), autoreturn=True
             )
 
         self.register_commands(items)
@@ -205,15 +193,11 @@ class ListPrompt(BasePrompt):
 
 class PvPrompt(BasePrompt):
     # def __init__(self, request: AioRequest, commands=None):
-    def __init__(
-        self, request: AioRequest, hub_cache: "HubCache", commands=None
-    ):
+    def __init__(self, request: AioRequest, hub_cache: "HubCache", commands=None):
         super().__init__(commands=commands)
         self.hub_cache = hub_cache
         self.request = request
-        self.register_commands(
-            {"r": Command(function_=self.refresh, label="refresh")}
-        )
+        self.register_commands({"r": Command(function_=self.refresh, label="refresh")})
         if request:
             self.hub_ip = request.hub_ip
         else:
@@ -230,10 +214,7 @@ class PvPrompt(BasePrompt):
 
 class PvResourcePrompt(PvPrompt):
     def __init__(
-        self,
-        pv_resource: ApiResource,
-        request: AioRequest,
-        hub_cache: "HubCache",
+        self, pv_resource: ApiResource, request: AioRequest, hub_cache: "HubCache"
     ):
         super().__init__(request, hub_cache)
         self.pv_resource = pv_resource
