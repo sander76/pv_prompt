@@ -101,7 +101,7 @@ class BasePrompt:
         toolbar=None,
         autocomplete=None,
         autoreturn=False,
-        default=None,
+        default="",
     ):
         """The currently active prompt.
 
