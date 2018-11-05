@@ -23,7 +23,7 @@ VERSION = "1.10.0"
 # What packages are required for this module to be executed?
 REQUIRED = [
     "prompt_toolkit",
-    "aiopvapi",
+    "aiopvapi>1.6.14",
     "pysmb",
     "asyncdns2",
     "pygments",
