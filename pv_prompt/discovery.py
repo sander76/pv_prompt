@@ -31,7 +31,9 @@ class Discovery(BasePrompt):
 
         resolver = asyncdns.MulticastResolver()
 
-        query = asyncdns.Query("_powerview._tcp.local.", asyncdns.ANY, asyncdns.IN)
+        query = asyncdns.Query(
+            "_powerview._tcp.local.", asyncdns.ANY, asyncdns.IN
+        )
         done = print_waiting_done("Discovering hubs")
 
         r = await resolver.lookup(query)
@@ -45,19 +47,6 @@ class Discovery(BasePrompt):
                 info(add)
                 self._ip_suggestions.append(add)
         self._populate_completer()
-        #
-        # zero = Zero(self.loop)
-        # done = print_waiting_done("Discovering hubs")
-        # LOGGER.debug("discover command fire")
-        # await zero.discover()
-        # LOGGER.debug("discovery done")
-        # await done()
-        # if zero.hubs:
-        #     self.print_hub_table()
-        #     for _hub in zero.hubs:
-        #         print_key_values(_hub.name, _hub.ip)
-        #         self._ip_suggestions.append(_hub.ip)
-        # self._populate_completer()
 
     async def _discover_hub1(self, *args, **kwargs):
         nb = NetBIOS()

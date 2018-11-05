@@ -14,7 +14,6 @@ class Nd(Enum):
     CONNECT = b"\x00\x01N\x00\x01A"
     NETWORKADD = b"\x00\x01N"
     GROUP_ADD = b"\x00\x01A"
-    RESET = b"\x00\x03#@r"
     STARTPROGRAM = b"\x00\x04#LPE"
     SAVE_POSITION_TOP = b"\x00\x04#LPO"
     SAVE_POSITION_BOTTOM = b"\x00\x04#LPC"
@@ -23,7 +22,9 @@ class Nd(Enum):
     REVERSE = b"\x00\x02#x"  # old
 
     TO_HUB_ID = b"\x00\x01z"
+    RESET = b"\x00\x03#@r"  # Can only be performed when dongle is in hub mode.
     NETWORK_RESET = b"\x00\x04@r?\x01"
+
     SET_DONGLE_ID = b"set_id"
 
     SAVE_VENETIAN_SLAT = b"\x00\x04#LPR"
@@ -39,6 +40,8 @@ class Nd(Enum):
     M25S_VVB_CENTER_STACK = b"\x00\x04#DS?"
     M25S_VENETIAN_16MM = b"\x00\x04#DS>"
     M25S_VENETIAN_25MM = b"\x00\x04#DS~"
+    M25S_VENETIAN_35MM = b"\x00\x04#DS\xBE"
+
     M25T_ROLLER = b"\x00\x04#DS*"
     TWIST = b"\x00\x04#DS,"
 
@@ -54,3 +57,5 @@ class Nd(Enum):
 
     ORIENT_M25S_DUETTE_LEFT = b"\x00\x03#dR"
     ORIENT_M25S_DUETTE_RIGHT = b"\x00\x03#dL"
+
+

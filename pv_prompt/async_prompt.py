@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from aiopvapi.helpers.aiorequest import AioRequest
 from prompt_toolkit.eventloop.defaults import use_asyncio_event_loop
 
+from pv_prompt.print_output import print_dict
 from pv_prompt.base_prompts import BasePrompt, PvPrompt, QuitException, Command
 from pv_prompt.discovery import Discovery
 from pv_prompt.helpers import get_loop, set_verbosity, VERBOSE
@@ -63,7 +64,7 @@ class MainMenu(BasePrompt):
         toolbar=None,
         autocomplete=None,
         autoreturn=False,
-        default=None,
+        default="",
     ):
         if self.hub_cache:
             await self.hub_cache.update()
@@ -84,6 +85,7 @@ class MainMenu(BasePrompt):
             self._register_hub_commands()
             self.hub_cache = HubCache(self.request)
             await self.hub_cache.update()
+            print_dict(self.hub_cache.user_data._raw)
             # async def answer_no(*args, **kwargs):
             #     LOGGER.debug("No entered.")
             #
@@ -126,7 +128,9 @@ def main():
     use_asyncio_event_loop()
 
     argparser = ArgumentParser()
-    argparser.add_argument("--hubip", help="The ip address of the hub", default=None)
+    argparser.add_argument(
+        "--hubip", help="The ip address of the hub", default=None
+    )
     argparser.add_argument(
         "--loglevel",
         default=30,

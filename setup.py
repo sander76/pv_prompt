@@ -18,7 +18,7 @@ URL = "https://github.com/sander76/pv_prompt"
 EMAIL = None
 AUTHOR = "Sander Teunissen"
 REQUIRES_PYTHON = ">=3.5.0"
-VERSION = "1.9.4"
+VERSION = "1.10.0"
 
 # What packages are required for this module to be executed?
 REQUIRED = [

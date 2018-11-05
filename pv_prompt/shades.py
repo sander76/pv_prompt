@@ -135,7 +135,7 @@ class Position(PvPrompt):
         toolbar=None,
         autocomplete=None,
         autoreturn=False,
-        default=None,
+        default="",
     ):
         if len(self._shade.allowed_positions) == 1:
             self._position = self._shade.allowed_positions[0]

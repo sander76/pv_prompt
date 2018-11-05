@@ -6,6 +6,7 @@ from aiopvapi.rooms import Rooms as PvRooms
 from aiopvapi.scene_members import SceneMembers as PvSceneMembers
 from aiopvapi.scenes import Scenes as PvScenes
 from aiopvapi.shades import Shades as PvShades
+from aiopvapi.hub import UserData
 from prompt_toolkit.completion import WordCompleter
 
 from pv_prompt.base_prompts import BasePrompt, InvalidIdException
@@ -76,7 +77,7 @@ class ResourceCache:
                 LOGGER.debug("yielding: %s", _item.name)
                 yield _item
 
-    async def select_resource(self, default=None):
+    async def select_resource(self, default=''):
         base_prompt = BasePrompt()
         resource = self._validate_id(
             await base_prompt.current_prompt(
@@ -111,6 +112,7 @@ class HubCache:
         self.scene_members = ResourceCache(
             PvSceneMembers(request), "scene member", request
         )
+        self.user_data = UserData(request)
         self.loop = loop or get_loop()
 
     async def update(self):
@@ -119,4 +121,5 @@ class HubCache:
         await self.rooms.get_resource()
         await self.scenes.get_resource()
         await self.scene_members.get_resource()
+        await self.user_data.update_user_data()
         await asyncio.sleep(1)

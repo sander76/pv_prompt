@@ -128,7 +128,7 @@ class CreateScene(PvPrompt):
         await self.print_selection()
 
     async def add_shade(self, *args, **kwargs):
-        pass
+        info("Not implemented yet.")
 
 
 class Scene(PvResourcePrompt):
